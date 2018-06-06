@@ -1,4 +1,5 @@
 import re
+import random
 from typing import List
 from collections import defaultdict
 
@@ -57,6 +58,16 @@ def get_data():
 
         data = to_array(eng, frs)
     return data
+def data_generator(data_dictionary):
+    bins = list(enumerate(data_dictionary.keys()))
+    random.shuffle(bins)
+    for bin in bins:
+        bin_data = bins[bin].copy()
+        random.shuffle(bin_data)
+        for batch in range(0, len(bin_data), 32):
+            batch_data = bin_data[batch: batch+32]
+            eng, french = zip(**batch_data)
+            yield np.array(eng), np.array(french)
 
 if __name__ == '__main__':
     data = get_data()
