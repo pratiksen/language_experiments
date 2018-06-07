@@ -42,7 +42,8 @@ def to_array(source, target):
         array[(len(src), len(tgt))].append((src, tgt))
     return array
 
-def get_data():
+
+def preprocessor():
     with open('D:/data/fra-eng/fra.txt', encoding='utf-8') as f:
         frs = []
         eng = []
@@ -56,8 +57,19 @@ def get_data():
             frs.append(french_index.index(french))
             eng.append(english_index.index(english))
 
-        data = to_array(eng, frs)
+        data = zip(frs, eng)
     return data
+
+
+def train_test_split(data, sample_frac=0.8):
+    random.shuffle(data)
+    n = len(data)
+    n_train = int(n * sample_frac)
+    train = data[:n_train]
+    test = data[n_train:]
+    return train, test
+
+
 def data_generator(data_dictionary):
     bins = list(enumerate(data_dictionary.keys()))
     random.shuffle(bins)
@@ -68,6 +80,7 @@ def data_generator(data_dictionary):
             batch_data = bin_data[batch: batch+32]
             eng, french = zip(**batch_data)
             yield np.array(eng), np.array(french)
+
 
 if __name__ == '__main__':
     data = get_data()
