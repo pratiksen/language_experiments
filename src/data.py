@@ -1,7 +1,9 @@
-import keras
-import numpy as np
 import random
 from collections import defaultdict
+
+import keras
+import numpy as np
+
 
 class DataGenerator(keras.utils.Sequence):
 
@@ -23,14 +25,15 @@ class DataGenerator(keras.utils.Sequence):
 
     def __len__(self):
         'Denotes the number of batches per epoch'
-        return int(np.floor(len(self._x) / self.batch_size))
+        return self._len
 
     def __getitem__(self, index):
         'Generate one batch of data'
-        X, y = self.data[index]
+        X, y = zip(*self.data[index])
         X = np.array(X)
         y = np.array(y)
-        return X, y
+        result = [X, y[:,:-1,:]], y[:,1:,:]
+        return result
 
     def on_epoch_end(self):
         'Updates indexes after each epoch'
@@ -48,3 +51,4 @@ class DataGenerator(keras.utils.Sequence):
                 data.append(batch)
         random.shuffle(data)
         self.data = data
+        self._len = len(data)

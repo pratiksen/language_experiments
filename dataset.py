@@ -1,49 +1,31 @@
-import re
 import random
-from typing import List
-from collections import defaultdict
+import re
 
-import numpy as np
+from keras.utils import to_categorical
 
-class Index:
-    def __init__(self):
-        self.words = set()
-        self.last_word_idx = 0
-        self.index_word = {}
-        self.word_index = {}
-
-    def index(self, words:List[str]) -> List[int]:
-        transformed = []
-        for word in words:
-            if word not in self.word_index:
-                self.add_word(word)
-            transformed.append(self.word_index[word])
-        return transformed
-
-    def add_word(self, word: str):
-        self.last_word_idx += 1
-        self.index_word[self.last_word_idx] = word
-        self.word_index[word] = self.last_word_idx
-
+from src.data import DataGenerator
+from src.index import Index
 
 
 def normalize_text(text):
     text = re.sub('[.!?]', ' ', text)
     text = re.sub('[^a-zA-Z.!?]+', " ", text)
-    text = text.lower().strip().split(' ')
+    text = list(text.lower().strip())
     return text
 
-def to_array(source, target):
-    array = defaultdict(list)
+def to_array(data, src_classes, tgt_classes):
+    array = []
 
-    for src, tgt in zip(source, target):
-        src = [-1] + src + [0]
-        tgt = [-1] + tgt + [0]
-        array[(len(src), len(tgt))].append((src, tgt))
+    for src, tgt in data:
+        src = [-1] + src + [-1]
+        tgt = [-1] + tgt + [-1]
+        src = to_categorical(src, num_classes=src_classes+1)
+        tgt = to_categorical(tgt, num_classes=tgt_classes+1)
+        array.append((src, tgt))
     return array
 
 
-def preprocessor():
+def preprocess():
     with open('D:/data/fra-eng/fra.txt', encoding='utf-8') as f:
         frs = []
         eng = []
@@ -57,8 +39,8 @@ def preprocessor():
             frs.append(french_index.index(french))
             eng.append(english_index.index(english))
 
-        data = zip(frs, eng)
-    return data
+        data = list(zip(frs, eng))
+    return data, (french_index, english_index)
 
 
 def train_test_split(data, sample_frac=0.8):
@@ -70,20 +52,17 @@ def train_test_split(data, sample_frac=0.8):
     return train, test
 
 
-def data_generator(data_dictionary):
-    bins = list(enumerate(data_dictionary.keys()))
-    random.shuffle(bins)
-    for bin in bins:
-        bin_data = bins[bin].copy()
-        random.shuffle(bin_data)
-        for batch in range(0, len(bin_data), 32):
-            batch_data = bin_data[batch: batch+32]
-            eng, french = zip(**batch_data)
-            yield np.array(eng), np.array(french)
-
+def etl():
+    data, dictionary = preprocess()
+    data = to_array(data, dictionary[0].last_word_idx+1, dictionary[0].last_word_idx+1)
+    train, test = train_test_split(data)
+    train = DataGenerator(*zip(*train))
+    test = DataGenerator(*zip(*test))
+    return train, test, dictionary
 
 if __name__ == '__main__':
-    data = get_data()
-    print('done')
-
+    a = etl()
+    train = a[0]
+    test = a[1]
+    print(train[1])
 
