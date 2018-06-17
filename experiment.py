@@ -1,7 +1,7 @@
 from sacred import Experiment
 
-import model
 import dataset
+import model
 
 ex = Experiment('language')
 
@@ -9,11 +9,12 @@ ex = Experiment('language')
 @ex.config
 def config():
     model_type = 'seq2seq'
-    params = {'max_sequence_len':None,
-              'units':[1024],
-              'rnn_params':{'recurrant_dropout':0.5}}
+    params = {'max_sentence_len':None,
+              'units':[128],
+              'rnn_params':{'recurrent_dropout':0.5}}
     optimizer = 'nadam'
-    loss = 'categorical_crossentropu'
+    loss = 'categorical_crossentropy'
+    verbose = 1
 
 
 @ex.capture
